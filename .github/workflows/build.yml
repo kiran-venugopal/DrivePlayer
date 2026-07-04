@@ -38,15 +38,28 @@ jobs:
           ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
 
       - name: Create GitHub Release & Upload Installer Assets
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}
-          name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'Latest Release' }}
-          files: |
-            dist-pack/DrivePlayer-*.dmg
-            dist-pack/DrivePlayer-*-mac.zip
-          draft: false
-          prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 1. Determine the tag name dynamically
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG_NAME="${{ github.ref_name }}"
+            RELEASE_TITLE="Release ${TAG_NAME}"
+            PRERELEASE_FLAG=""
+          else
+            TAG_NAME="latest"
+            RELEASE_TITLE="Latest Development Build"
+            PRERELEASE_FLAG="--prerelease"
+          fi
+
+          echo "Targeting Tag: $TAG_NAME"
+
+          # 2. Use GitHub CLI to cleanly create/overwrite the release and upload your DMGs & ZIPs
+          gh release create "$TAG_NAME" \
+            dist-pack/DrivePlayer-*.dmg \
+            dist-pack/DrivePlayer-*-mac.zip \
+            --title "$RELEASE_TITLE" \
+            --generate-notes \
+            $PRERELEASE_FLAG \
+            --clobber # Overwrites existing files/releases for the 'latest' tag without crashing
+
