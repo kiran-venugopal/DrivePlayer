@@ -2,6 +2,8 @@ name: Build and Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*' # Trigger on version tags (e.g., v1.0.0)
   workflow_dispatch: # Allow manual trigger from the GitHub Actions tab
@@ -37,12 +39,14 @@ jobs:
 
       - name: Create GitHub Release & Upload Installer Assets
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
         with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'Latest Release' }}
           files: |
             dist-pack/DrivePlayer-*.dmg
             dist-pack/DrivePlayer-*-mac.zip
-          draft: true # Creates a draft release so you can edit and verify before publishing
-          prerelease: false
+          draft: false
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
