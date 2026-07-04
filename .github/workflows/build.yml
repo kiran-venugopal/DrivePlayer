@@ -9,8 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    name: Build & Publish Assets
+  release-mac:
+    name: Build & Publish macOS Assets
     runs-on: macos-latest
 
     steps:
@@ -26,13 +26,36 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Build and Publish Electron App
-        # Using a reliable community action to handle compiling and uploading
+      - name: Build and Publish macOS App
         uses: samuelmeuli/action-electron-builder@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # Set release to true to instruct electron-builder to publish the assets
+          # Instruct electron-builder to compile and publish the macOS assets
           release: true
-          # Compile both macOS and Windows installers on the same runner to avoid duplicate draft releases
           mac: true
+
+  release-win:
+    name: Build & Publish Windows Assets
+    runs-on: windows-latest
+    needs: release-mac # Wait for the macOS job to create the draft release first
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm' # Speeds up builds by caching node_modules
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build and Publish Windows App
+        uses: samuelmeuli/action-electron-builder@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Instruct electron-builder to compile and publish the Windows assets
+          release: true
           windows: true
