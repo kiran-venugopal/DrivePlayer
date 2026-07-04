@@ -1,0 +1,18 @@
+# Dependency directories
+node_modules/
+
+# Production installers and builds
+dist-pack/
+dist/
+out/
+
+# macOS system files
+.DS_Store
+
+# Local diagnostic logs
+*.log
+
+# Local secrets or environment files
+.env
+config.json
+credentials.json

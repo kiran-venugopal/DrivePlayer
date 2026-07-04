@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DrivePlayer - Google Drive Local Streamer</title>
+  <link rel="stylesheet" href="index.css">
+  <!-- Load Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Window Titlebar for macOS hiddenInset -->
+  <div class="titlebar"></div>
+
+  <!-- App Wrapper -->
+  <div class="app-container">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo-glow"></div>
+        <span class="brand-title">DrivePlayer</span>
+      </div>
+
+      <nav class="nav-menu">
+        <button id="btn-browse" class="nav-item active">
+          <span class="icon">📁</span> Browse Drive
+        </button>
+        <button id="btn-settings-nav" class="nav-item">
+          <span class="icon">⚙️</span> API Settings
+        </button>
+      </nav>
+
+      <!-- Connection Status Panel -->
+      <div class="status-panel">
+        <div class="status-indicator" id="status-dot"></div>
+        <div class="status-info">
+          <div class="status-label">Google Account</div>
+          <div class="status-value" id="status-text">Disconnected</div>
+        </div>
+        <button id="btn-logout" class="btn-logout" title="Log Out" style="display: none;">✕</button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Top Action Bar -->
+      <header class="top-bar">
+        <div class="breadcrumbs-container">
+          <button id="btn-back" class="btn-nav" title="Go Back" disabled>←</button>
+          <button id="btn-home" class="btn-nav" title="Go to Root">🏠</button>
+          <div class="breadcrumbs" id="breadcrumbs">Home</div>
+        </div>
+        
+        <div class="search-container">
+          <input type="text" id="search-input" placeholder="Search videos in Drive...">
+          <button id="btn-search" class="btn-search">Search</button>
+        </div>
+      </header>
+
+      <!-- Browsing Panel -->
+      <section id="panel-browse" class="content-panel active">
+        <div class="folder-list-container">
+          <div class="section-header">
+            <h2>Media Browser</h2>
+            <button id="btn-refresh" class="btn-refresh" title="Refresh files">🔄 Refresh</button>
+          </div>
+          
+          <div class="file-grid" id="file-grid">
+            <!-- Dynamic Files and Folders list here -->
+            <div class="loader-container" id="grid-loader" style="display: none;">
+              <div class="spinner"></div>
+              <p>Loading files from Google Drive...</p>
+            </div>
+            <div class="empty-state" id="empty-state">
+              <span class="empty-icon">📂</span>
+              <h3>No items found</h3>
+              <p>Connect your Google Drive or check your folders.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings Panel -->
+      <section id="panel-settings" class="content-panel">
+        <div class="settings-card">
+          <h2>Google API Configuration</h2>
+          <p class="settings-desc">To access your Google Drive video files, you must configure your own Google Cloud Console credentials. This ensures you have your own API rate limits and full control over your data.</p>
+          
+          <div class="setup-steps">
+            <h3>How to set up in 2 minutes:</h3>
+            <ol>
+              <li>Go to the <a href="https://console.cloud.google.com/" id="link-gcp" class="external-link">Google Cloud Console</a>.</li>
+              <li>Create a new project, enable the <strong>Google Drive API</strong>.</li>
+              <li>Go to <strong>APIs & Services &gt; Credentials</strong>, click <strong>Create Credentials &gt; OAuth client ID</strong>.</li>
+              <li>Set Application Type to <strong>Desktop app</strong>.</li>
+              <li>Add Redirect URI: <code class="code-badge">http://127.0.0.1:54321/auth/callback</code></li>
+              <li>Copy the Client ID and Client Secret, then paste them below and save.</li>
+            </ol>
+          </div>
+
+          <form id="settings-form" class="settings-form">
+            <div class="form-group">
+              <label for="input-client-id">Google OAuth Client ID</label>
+              <input type="password" id="input-client-id" placeholder="Enter Client ID..." required autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="input-client-secret">Google OAuth Client Secret</label>
+              <input type="password" id="input-client-secret" placeholder="Enter Client Secret..." required autocomplete="off">
+            </div>
+            <div class="form-actions" style="display: flex; gap: 12px; align-items: center;">
+              <button type="submit" class="btn-save">Save Credentials</button>
+              <button type="button" id="btn-settings-connect" class="btn-connect-settings" style="display: none;">🔗 Connect Account</button>
+            </div>
+          </form>
+
+          <div style="height: 1px; background-color: var(--border-glass); margin: 24px 0;"></div>
+
+          <div class="logs-section" style="display: flex; flex-direction: column; gap: 8px;">
+            <h3 style="font-size: 1.05rem; margin-bottom: 4px;">Application Diagnostics</h3>
+            <p style="color: var(--text-sub); font-size: 0.85rem; line-height: 1.4; margin-bottom: 8px;">Access local logs to troubleshoot connection attempts, API calls, and local VLC/IINA stream events.</p>
+            <button type="button" id="btn-open-log" class="btn-secondary" style="width: fit-content;">📋 Open Log File</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- OAuth Login Overlay Modal -->
+      <div class="modal-overlay" id="login-overlay">
+        <div class="modal-card login-card">
+          <div class="logo-glow-large"></div>
+          <h2>Welcome to DrivePlayer</h2>
+          <p>Stream your Google Drive video files directly to local players like VLC and IINA with range-seeking support.</p>
+          
+          <div class="login-action-container" id="login-action-container">
+            <!-- Will show error or login button -->
+            <button id="btn-connect" class="btn-connect">Connect Google Drive</button>
+            <p class="login-tip">Please ensure you have configured your Client ID and Client Secret in Settings first.</p>
+          </div>
+          
+          <button id="btn-go-settings" class="btn-text-link">Configure API Credentials First</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Media Details Drawer -->
+    <aside class="media-drawer" id="media-drawer">
+      <button class="btn-close-drawer" id="btn-close-drawer">×</button>
+      <div class="drawer-content">
+        <div class="drawer-icon">🎬</div>
+        <h3 id="drawer-title" class="drawer-title">Video Name.mp4</h3>
+        
+        <div class="drawer-meta">
+          <div class="meta-row">
+            <span class="meta-label">Size:</span>
+            <span class="meta-value" id="drawer-size">1.2 GB</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Modified:</span>
+            <span class="meta-value" id="drawer-date">2026-07-04</span>
+          </div>
+        </div>
+
+        <div class="drawer-actions">
+          <h4>Play In Player</h4>
+          <button class="btn-play app-btn" id="btn-play-app">
+            <span class="play-icon">📺</span> Play in App
+          </button>
+          <button class="btn-play vlc-btn" id="btn-play-vlc">
+            <span class="play-icon">▶</span> Play in VLC
+          </button>
+          <button class="btn-play iina-btn" id="btn-play-iina">
+            <span class="play-icon">▶</span> Play in IINA
+          </button>
+          <button class="btn-play default-btn" id="btn-play-default">
+            <span class="play-icon">↗</span> Default Player
+          </button>
+          
+          <div class="divider"></div>
+          
+          <button class="btn-copy" id="btn-copy-link">
+            <span class="copy-icon">🔗</span> Copy Stream Link
+          </button>
+          <div class="copy-alert" id="copy-alert">Link copied to clipboard!</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Built-in Video Player Overlay Modal -->
+  <div class="modal-overlay" id="player-overlay">
+    <button class="btn-close-player" id="btn-close-player">✕</button>
+    <div class="player-card">
+      <div class="player-title" id="player-video-title">Video Name.mp4</div>
+      <div class="video-wrapper">
+        <video id="built-in-video" controls autoplay></video>
+      </div>
+      <p class="player-tip">💡 Note: The built-in player supports MP4 & WebM. For MKV, AVI, or DTS audio, please use VLC or IINA.</p>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
