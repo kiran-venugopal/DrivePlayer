@@ -27,7 +27,7 @@ jobs:
         run: npm ci
 
       - name: Build Electron App
-        run: npm run dist
+        run: npm run dist -- --publish always
         env:
           # Skip macOS Code Signing on the CI runner
           CSC_IDENTITY_AUTO_DISCOVERY: false
