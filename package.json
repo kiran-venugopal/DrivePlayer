@@ -11,7 +11,7 @@
   "build": {
     "appId": "com.driveplayer.app",
     "productName": "DrivePlayer",
-    "publish": "never",
+    "publish": [],
     "directories": {
       "output": "dist-pack"
     },
