@@ -11,11 +11,7 @@ permissions:
 jobs:
   release:
     name: Build & Publish Assets
-    strategy:
-      matrix:
-        # Build for macOS and Windows simultaneously
-        os: [macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
 
     steps:
       - name: Check out Git repository
@@ -37,3 +33,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # Set release to true to instruct electron-builder to publish the assets
           release: true
+          # Compile both macOS and Windows installers on the same runner to avoid duplicate draft releases
+          mac: true
+          windows: true
