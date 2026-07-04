@@ -12,9 +12,6 @@
     "appId": "com.driveplayer.app",
     "productName": "DrivePlayer",
     "publish": [],
-    "directories": {
-      "output": "dist-pack"
-    },
     "mac": {
       "category": "public.app-category.video",
       "icon": "icon.png",

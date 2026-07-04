@@ -13,8 +13,8 @@ jobs:
     name: Build & Publish Assets
     strategy:
       matrix:
-        # Build for macOS, Windows, and Linux simultaneously
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        # Build for macOS and Windows simultaneously
+        os: [macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
