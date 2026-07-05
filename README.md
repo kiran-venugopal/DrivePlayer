@@ -1,6 +1,6 @@
 # DrivePlayer
 
-A desktop app to play google drive files locally securly, no backend all the secrets are store client side
+A desktop app to play google drive files locally securly, there is no backend and all the data are stored client side
 
 Download it from release: https://github.com/kiran-venugopal/DrivePlayer/releases
 
