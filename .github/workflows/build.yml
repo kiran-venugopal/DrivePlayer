@@ -28,6 +28,8 @@ jobs:
 
       - name: Build and Publish macOS App
         uses: samuelmeuli/action-electron-builder@v1
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # Instruct electron-builder to compile and publish the macOS assets
