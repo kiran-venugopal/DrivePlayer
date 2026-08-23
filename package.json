@@ -17,7 +17,7 @@
     "mac": {
       "category": "public.app-category.video",
       "icon": "icon.png",
-      "identity": null,
+      "identity": "-",
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
       "target": [
