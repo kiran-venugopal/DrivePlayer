@@ -196,8 +196,8 @@ async function refreshAccessToken() {
   }
 }
 
-// Fetch Google Drive Folders/Files API helper
-function fetchGoogleDrive(endpoint, searchParams = {}) {
+// Fetch Google Drive API helper (supports GET, PATCH, etc.)
+function fetchGoogleDrive(endpoint, searchParams = {}, options = {}) {
   return new Promise(async (resolve, reject) => {
     if (!credentials.accessToken) {
       try {
@@ -210,17 +210,26 @@ function fetchGoogleDrive(endpoint, searchParams = {}) {
     const url = new URL(`https://www.googleapis.com/drive/v3/${endpoint}`);
     Object.keys(searchParams).forEach(key => url.searchParams.append(key, searchParams[key]));
     
+    const method = options.method || 'GET';
+    const bodyData = options.body ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body)) : null;
+
     const makeRequest = () => {
-      const options = {
-        method: 'GET',
-        headers: {
-          'Authorization': `BaseBearer ${credentials.accessToken}` // Custom check or standard
-        }
+      const reqHeaders = {
+        'Authorization': `Bearer ${credentials.accessToken}`
       };
-      // Correct standard bearer header:
-      options.headers['Authorization'] = `Bearer ${credentials.accessToken}`;
+
+      if (bodyData) {
+        reqHeaders['Content-Type'] = 'application/json';
+        reqHeaders['Content-Length'] = Buffer.byteLength(bodyData);
+      }
+
+      const reqOptions = {
+        method: method,
+        headers: reqHeaders,
+        body: bodyData
+      };
       
-      requestWithRedirects(url.href, options, (err, res) => {
+      requestWithRedirects(url.href, reqOptions, (err, res) => {
         if (err) return reject(err);
         
         let rawData = '';
@@ -233,13 +242,13 @@ function fetchGoogleDrive(endpoint, searchParams = {}) {
               try {
                 await refreshAccessToken();
                 // Re-run
-                return resolve(await fetchGoogleDrive(endpoint, searchParams));
+                return resolve(await fetchGoogleDrive(endpoint, searchParams, options));
               } catch (refreshErr) {
                 return reject(new Error('Unauthorized: Session expired'));
               }
             }
             
-            const parsed = JSON.parse(rawData);
+            const parsed = rawData ? JSON.parse(rawData) : {};
             if (res.statusCode >= 400) {
               return reject(new Error(parsed.error?.message || `HTTP ${res.statusCode}`));
             }
@@ -498,13 +507,53 @@ ipcMain.handle('start-oauth', (event) => {
           return;
         }
 
-        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(`
+          <!DOCTYPE html>
           <html>
-            <body style="font-family:-apple-system,BlinkMacSystemFont,sans-serif; text-align:center; padding: 40px; background-color:#1e1e2e; color:#cdd6f4;">
-              <h2 style="color:#a6e3a1;">✓ Connected Successfully!</h2>
-              <p>You can close this window now and return to the application.</p>
-              <script>setTimeout(() => window.close(), 2000);</script>
+            <head>
+              <meta charset="utf-8">
+              <title>DrivePlayer Connected</title>
+              <style>
+                body {
+                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  height: 100vh;
+                  margin: 0;
+                  background-color: #12141a;
+                  color: #f0f2f5;
+                  text-align: center;
+                }
+                .card {
+                  background: #1c202a;
+                  padding: 40px 48px;
+                  border-radius: 16px;
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+                }
+                h2 {
+                  color: #ffcc00;
+                  margin: 0 0 12px 0;
+                  font-size: 1.6rem;
+                  font-weight: 600;
+                }
+                p {
+                  color: #9499b3;
+                  margin: 0 0 8px 0;
+                  font-size: 0.95rem;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="card">
+                <h2>Connected Successfully!</h2>
+                <p>Google Drive authorization is complete.</p>
+                <p>You can close this tab and return to DrivePlayer.</p>
+              </div>
+              <script>setTimeout(() => window.close(), 2500);</script>
             </body>
           </html>
         `);
@@ -539,7 +588,7 @@ ipcMain.handle('start-oauth', (event) => {
     });
 
     authServer.listen(AUTH_PORT, () => {
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${credentials.clientId}&redirect_uri=http://127.0.0.1:${AUTH_PORT}/auth/callback&response_type=code&scope=https://www.googleapis.com/auth/drive.readonly&access_type=offline&prompt=consent`;
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${credentials.clientId}&redirect_uri=http://127.0.0.1:${AUTH_PORT}/auth/callback&response_type=code&scope=https://www.googleapis.com/auth/drive&access_type=offline&prompt=consent`;
       shell.openExternal(authUrl);
       console.log('OAuth helper listening on port', AUTH_PORT);
     });
@@ -558,15 +607,12 @@ ipcMain.handle('fetch-drive-files', async (event, { folderId, search = '' }) => 
     if (search) {
       q = `name contains '${search.replace(/'/g, "\\'")}' and trashed = false`;
     }
-    
-    // We restrict search results / listings to either directories or video files
-    q += ` and (mimeType = 'application/vnd.google-apps.folder' or mimeType contains 'video/')`;
 
     const data = await fetchGoogleDrive('files', {
       q: q,
-      fields: 'files(id,name,mimeType,size,modifiedTime,thumbnailLink)',
+      fields: 'files(id,name,mimeType,size,modifiedTime,thumbnailLink,iconLink,webViewLink)',
       orderBy: 'folder,name',
-      pageSize: 150
+      pageSize: 200
     });
 
     return { success: true, files: data.files || [] };
@@ -647,5 +693,26 @@ ipcMain.handle('open-log-file', () => {
   }
   return { success: false, error: 'Log file does not exist yet.' };
 });
+
+// Rename file or folder in Google Drive
+ipcMain.handle('rename-file', async (event, { fileId, newName }) => {
+  try {
+    if (!fileId || !newName || !newName.trim()) {
+      return { success: false, error: 'File ID and new name are required' };
+    }
+
+    const trimmedName = newName.trim();
+    const result = await fetchGoogleDrive(`files/${fileId}`, {}, {
+      method: 'PATCH',
+      body: { name: trimmedName }
+    });
+
+    return { success: true, file: result };
+  } catch (err) {
+    console.error('IPC rename-file error:', err);
+    return { success: false, error: err.message };
+  }
+});
+
 
 

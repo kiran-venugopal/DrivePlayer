@@ -10,7 +10,8 @@ contextBridge.exposeInMainWorld('api', {
   getStreamLink: (fileId) => ipcRenderer.invoke('get-stream-link', { fileId }),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
   logMessage: (type, message) => ipcRenderer.invoke('log-message', { type, message }),
-  openLogFile: () => ipcRenderer.invoke('open-log-file')
+  openLogFile: () => ipcRenderer.invoke('open-log-file'),
+  renameFile: (fileId, newName) => ipcRenderer.invoke('rename-file', { fileId, newName })
 });
 
 

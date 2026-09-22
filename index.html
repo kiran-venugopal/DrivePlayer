@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DrivePlayer - Google Drive Local Streamer</title>
   <link rel="stylesheet" href="index.css">
-  <!-- Load Inter Font -->
+  <!-- Load Inter & Outfit Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,16 +20,18 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="brand">
-        <div class="logo-glow"></div>
+        <div class="brand-logo-wrap">
+          <img src="icon.png" alt="DrivePlayer Logo" class="brand-logo-img">
+        </div>
         <span class="brand-title">DrivePlayer</span>
       </div>
 
       <nav class="nav-menu">
         <button id="btn-browse" class="nav-item active">
-          <span class="icon">📁</span> Browse Drive
+          <span class="icon" data-lucide="folder"></span> Browse Drive
         </button>
         <button id="btn-settings-nav" class="nav-item">
-          <span class="icon">⚙️</span> API Settings
+          <span class="icon" data-lucide="settings"></span> API Settings
         </button>
       </nav>
 
@@ -40,7 +42,9 @@
           <div class="status-label">Google Account</div>
           <div class="status-value" id="status-text">Disconnected</div>
         </div>
-        <button id="btn-logout" class="btn-logout" title="Log Out" style="display: none;">✕</button>
+        <button id="btn-logout" class="btn-logout" title="Log Out" style="display: none;">
+          <i data-lucide="log-out"></i>
+        </button>
       </div>
     </aside>
 
@@ -50,13 +54,23 @@
       <!-- Top Action Bar -->
       <header class="top-bar">
         <div class="breadcrumbs-container">
-          <button id="btn-back" class="btn-nav" title="Go Back" disabled>←</button>
-          <button id="btn-home" class="btn-nav" title="Go to Root">🏠</button>
+          <button id="btn-back" class="btn-nav" title="Go Back" disabled>
+            <i data-lucide="arrow-left"></i>
+          </button>
+          <button id="btn-home" class="btn-nav" title="Go to Root">
+            <i data-lucide="home"></i>
+          </button>
           <div class="breadcrumbs" id="breadcrumbs">Home</div>
         </div>
         
         <div class="search-container">
-          <input type="text" id="search-input" placeholder="Search videos in Drive...">
+          <div class="search-input-wrapper">
+            <i data-lucide="search" class="search-icon-inside"></i>
+            <input type="text" id="search-input" placeholder="Search Drive files & folders...">
+            <button id="btn-clear-search" class="btn-clear-search" title="Clear search" style="display: none;">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
           <button id="btn-search" class="btn-search">Search</button>
         </div>
       </header>
@@ -65,8 +79,13 @@
       <section id="panel-browse" class="content-panel active">
         <div class="folder-list-container">
           <div class="section-header">
-            <h2>Media Browser</h2>
-            <button id="btn-refresh" class="btn-refresh" title="Refresh files">🔄 Refresh</button>
+            <div class="section-title-wrap">
+              <h2>Media Browser</h2>
+              <span class="file-count-badge" id="file-count-badge">0 items</span>
+            </div>
+            <button id="btn-refresh" class="btn-refresh" title="Refresh files">
+              <i data-lucide="refresh-cw"></i> <span>Refresh</span>
+            </button>
           </div>
           
           <div class="file-grid" id="file-grid">
@@ -76,9 +95,11 @@
               <p>Loading files from Google Drive...</p>
             </div>
             <div class="empty-state" id="empty-state">
-              <span class="empty-icon">📂</span>
+              <div class="empty-icon-wrap">
+                <i data-lucide="folder-open" class="empty-icon"></i>
+              </div>
               <h3>No items found</h3>
-              <p>Connect your Google Drive or check your folders.</p>
+              <p>Connect your Google Drive or open a folder with files.</p>
             </div>
           </div>
         </div>
@@ -112,8 +133,12 @@
               <input type="password" id="input-client-secret" placeholder="Enter Client Secret..." required autocomplete="off">
             </div>
             <div class="form-actions" style="display: flex; gap: 12px; align-items: center;">
-              <button type="submit" class="btn-save">Save Credentials</button>
-              <button type="button" id="btn-settings-connect" class="btn-connect-settings" style="display: none;">🔗 Connect Account</button>
+              <button type="submit" class="btn-save">
+                <i data-lucide="save"></i> <span>Save Credentials</span>
+              </button>
+              <button type="button" id="btn-settings-connect" class="btn-connect-settings" style="display: none;">
+                <i data-lucide="link"></i> <span>Connect Account</span>
+              </button>
             </div>
           </form>
 
@@ -122,7 +147,9 @@
           <div class="logs-section" style="display: flex; flex-direction: column; gap: 8px;">
             <h3 style="font-size: 1.05rem; margin-bottom: 4px;">Application Diagnostics</h3>
             <p style="color: var(--text-sub); font-size: 0.85rem; line-height: 1.4; margin-bottom: 8px;">Access local logs to troubleshoot connection attempts, API calls, and local VLC/IINA stream events.</p>
-            <button type="button" id="btn-open-log" class="btn-secondary" style="width: fit-content;">📋 Open Log File</button>
+            <button type="button" id="btn-open-log" class="btn-secondary" style="width: fit-content;">
+              <i data-lucide="file-text"></i> <span>Open Log File</span>
+            </button>
           </div>
         </div>
       </section>
@@ -130,13 +157,16 @@
       <!-- OAuth Login Overlay Modal -->
       <div class="modal-overlay" id="login-overlay">
         <div class="modal-card login-card">
-          <div class="logo-glow-large"></div>
+          <div class="login-brand-icon">
+            <img src="icon.png" alt="DrivePlayer" class="login-logo-img">
+          </div>
           <h2>Welcome to DrivePlayer</h2>
-          <p>Stream your Google Drive video files directly to local players like VLC and IINA with range-seeking support.</p>
+          <p>Stream and manage your Google Drive files directly on macOS with native player streaming.</p>
           
           <div class="login-action-container" id="login-action-container">
-            <!-- Will show error or login button -->
-            <button id="btn-connect" class="btn-connect">Connect Google Drive</button>
+            <button id="btn-connect" class="btn-connect">
+              <i data-lucide="log-in"></i> <span>Connect Google Drive</span>
+            </button>
             <p class="login-tip">Please ensure you have configured your Client ID and Client Secret in Settings first.</p>
           </div>
           
@@ -145,14 +175,39 @@
       </div>
     </main>
 
-    <!-- Right Media Details Drawer -->
+    <!-- Drawer Backdrop (clicking closes drawer) -->
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+
+    <!-- Right File Details Drawer (Slide-over overlay without shrinking grid) -->
     <aside class="media-drawer" id="media-drawer">
-      <button class="btn-close-drawer" id="btn-close-drawer">×</button>
+      <div class="drawer-header">
+        <span class="drawer-header-title">File Details</span>
+        <button class="btn-close-drawer" id="btn-close-drawer" title="Close Details">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
       <div class="drawer-content">
-        <div class="drawer-icon">🎬</div>
-        <h3 id="drawer-title" class="drawer-title">Video Name.mp4</h3>
+        <!-- Thumbnail Preview or Big Icon -->
+        <div class="drawer-preview-box" id="drawer-preview-box">
+          <div class="drawer-icon-wrap" id="drawer-icon-wrap">
+            <i data-lucide="file" id="drawer-main-icon"></i>
+          </div>
+          <img id="drawer-thumb-img" class="drawer-thumb-img" alt="Thumbnail Preview" referrerpolicy="no-referrer" style="display: none;">
+        </div>
+
+        <div class="drawer-title-row">
+          <h3 id="drawer-title" class="drawer-title">Filename</h3>
+          <button id="btn-open-rename" class="btn-icon-action" title="Rename File">
+            <i data-lucide="edit-3"></i>
+          </button>
+        </div>
         
         <div class="drawer-meta">
+          <div class="meta-row">
+            <span class="meta-label">Type:</span>
+            <span class="meta-value" id="drawer-type">Video</span>
+          </div>
           <div class="meta-row">
             <span class="meta-label">Size:</span>
             <span class="meta-value" id="drawer-size">1.2 GB</span>
@@ -163,44 +218,88 @@
           </div>
         </div>
 
-        <div class="drawer-actions">
-          <h4>Play In Player</h4>
+        <!-- Video Player Actions (shown for video files) -->
+        <div class="drawer-actions" id="drawer-video-actions">
+          <h4>Stream to Player</h4>
           <button class="btn-play app-btn" id="btn-play-app">
-            <span class="play-icon">📺</span> Play in App
+            <i data-lucide="play" class="play-icon"></i> <span>Play in App</span>
           </button>
           <button class="btn-play vlc-btn" id="btn-play-vlc">
-            <span class="play-icon">▶</span> Play in VLC
+            <i data-lucide="play-circle" class="play-icon"></i> <span>Play in VLC</span>
           </button>
           <button class="btn-play iina-btn" id="btn-play-iina">
-            <span class="play-icon">▶</span> Play in IINA
+            <i data-lucide="play-circle" class="play-icon"></i> <span>Play in IINA</span>
           </button>
           <button class="btn-play default-btn" id="btn-play-default">
-            <span class="play-icon">↗</span> Default Player
+            <i data-lucide="external-link" class="play-icon"></i> <span>Default Player</span>
           </button>
           
           <div class="divider"></div>
           
           <button class="btn-copy" id="btn-copy-link">
-            <span class="copy-icon">🔗</span> Copy Stream Link
+            <i data-lucide="link" class="copy-icon"></i> <span>Copy Stream Link</span>
           </button>
           <div class="copy-alert" id="copy-alert">Link copied to clipboard!</div>
+        </div>
+
+        <!-- Non-Video File Actions -->
+        <div class="drawer-actions" id="drawer-general-actions" style="display: none;">
+          <h4>Actions</h4>
+          <button class="btn-play default-btn" id="btn-open-folder" style="display: none;">
+            <i data-lucide="folder-open" class="play-icon"></i> <span>Open Folder</span>
+          </button>
+          <button class="btn-play default-btn" id="btn-open-web">
+            <i data-lucide="external-link" class="play-icon"></i> <span>Open in Google Drive</span>
+          </button>
         </div>
       </div>
     </aside>
   </div>
 
-  <!-- Built-in Video Player Overlay Modal -->
-  <div class="modal-overlay" id="player-overlay">
-    <button class="btn-close-player" id="btn-close-player">✕</button>
-    <div class="player-card">
-      <div class="player-title" id="player-video-title">Video Name.mp4</div>
-      <div class="video-wrapper">
-        <video id="built-in-video" controls autoplay></video>
+  <!-- Rename Modal Dialog -->
+  <div class="modal-overlay" id="rename-overlay">
+    <div class="modal-card rename-card">
+      <div class="modal-card-header">
+        <h3 id="rename-dialog-title">Rename File</h3>
+        <button class="btn-close-modal" id="btn-close-rename">
+          <i data-lucide="x"></i>
+        </button>
       </div>
-      <p class="player-tip">💡 Note: The built-in player supports MP4 & WebM. For MKV, AVI, or DTS audio, please use VLC or IINA.</p>
+      <form id="rename-form" class="rename-form">
+        <div class="form-group">
+          <label for="input-rename">New Name</label>
+          <input type="text" id="input-rename" required autocomplete="off" spellcheck="false">
+        </div>
+        <div class="rename-actions">
+          <button type="button" class="btn-cancel" id="btn-cancel-rename">Cancel</button>
+          <button type="submit" class="btn-save" id="btn-submit-rename">
+            <i data-lucide="check"></i> <span>Save Name</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
+  <!-- Built-in Video Player Overlay Modal -->
+  <div class="modal-overlay" id="player-overlay">
+    <button class="btn-close-player" id="btn-close-player" title="Close Player">
+      <i data-lucide="x"></i>
+    </button>
+    <div class="player-card">
+      <div class="player-header">
+        <i data-lucide="film" class="player-header-icon"></i>
+        <div class="player-title" id="player-video-title">Video Name.mp4</div>
+      </div>
+      <div class="video-wrapper">
+        <video id="built-in-video" controls autoplay></video>
+      </div>
+      <p class="player-tip">Note: The built-in player supports MP4 & WebM. For MKV, AVI, or DTS audio, please use VLC or IINA.</p>
+    </div>
+  </div>
+
+  <!-- Include bundled Lucide Icons script -->
+  <script src="lucide.min.js"></script>
+  <!-- Main renderer script -->
   <script src="renderer.js"></script>
 </body>
 </html>
